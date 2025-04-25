@@ -1,0 +1,30 @@
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672" # Rabbit Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  backend:
+    build: ./backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    restart: always
+
+  runner:
+    build: ./runner
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always
