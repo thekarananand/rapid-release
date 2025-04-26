@@ -30,3 +30,6 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend:/app/backend   # Backend as Sample Build Application

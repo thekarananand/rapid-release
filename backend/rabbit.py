@@ -53,7 +53,7 @@ class Rabbit:
             channel.basic_consume(
                 queue=queue,
                 on_message_callback=callback,
-                auto_ack=True
+                auto_ack=False
             )
             print(f"🟢 Consuming from queue: {queue}")
             try:
