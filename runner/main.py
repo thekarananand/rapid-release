@@ -14,10 +14,7 @@ rabbit.declareQueues([
     queue
 ])
 
-rabbit.onConsume(
+rabbit.consume(
     queue    = queue,
     callback = callback,
 )
-
-print(' [*] Waiting for build job....')
-rabbit.startConsuming()
