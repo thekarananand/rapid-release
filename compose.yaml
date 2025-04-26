@@ -3,7 +3,7 @@ services:
     container_name: rabbitmq
     image: rabbitmq:3-management
     ports:
-      - "15672:15672" # Rabbit Management UI
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
@@ -13,6 +13,8 @@ services:
       timeout: 5s
       retries: 5
     restart: always
+    networks:
+      - rapid-release
 
   backend:
     build: ./backend
@@ -20,16 +22,52 @@ services:
       rabbitmq:
         condition: service_healthy
     ports:
-     - "8000:8000"
-
+      - "8000:8000"
     restart: always
+    networks:
+      - rapid-release
 
   runner:
     build: ./runner
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      - rabbitmq
+      - elasticsearch
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./backend:/app/backend   # Backend as Sample Build Application
+      - ./backend:/app/backend
+    networks:
+      - rapid-release
+  
+  elasticsearch:
+    image: elasticsearch:8.18.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep '\"status\":\"green\"'"]
+      interval: 10s
+      retries: 5
+    networks:
+      - rapid-release
+
+  kibana:
+    image: kibana:8.18.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - rapid-release
+
+networks:
+  rapid-release:
+    driver: bridge
